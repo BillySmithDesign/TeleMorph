@@ -37,24 +37,33 @@ M3 applies a reviewed plan to create/configure a destination and writes an apply
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
+pip install -e .
 ```
+
+## Guided Help
+
+```bash
+telemorph help
+```
+
+This shows the normal flow, default paths, safe commands, and the write command that requires confirmation.
 
 ## Export A Blueprint
 
 ```bash
-python -m telegram_structure_cloner export --output blueprint.json
+telemorph export
 ```
 
 You can also pass a source by username, invite link, numeric ID, or dialog name:
 
 ```bash
-python -m telegram_structure_cloner export --source @source_channel --output blueprints/source.blueprint.json
+telemorph export --source @source_channel --output blueprints/source.blueprint.json
 ```
 
 ## Validate A Blueprint
 
 ```bash
-python -m telegram_structure_cloner validate blueprints/source.blueprint.json
+telemorph validate
 ```
 
 Validation checks the schema version, required top-level fields, source identity, forum structure, and unsupported-property reporting format.
@@ -62,13 +71,13 @@ Validation checks the schema version, required top-level fields, source identity
 ## Create A Dry-Run Plan
 
 ```bash
-python -m telegram_structure_cloner plan blueprints/source.blueprint.json --output plans/source.plan.json
+telemorph plan
 ```
 
 Override the planned destination title if needed:
 
 ```bash
-python -m telegram_structure_cloner plan blueprints/source.blueprint.json --destination-title "My Cloned Forum"
+telemorph plan blueprints/source.blueprint.json --destination-title "My Cloned Forum"
 ```
 
 The plan is a JSON artifact with ordered steps, warnings, blocked properties, and a `dry_run: true` flag. It is designed to be reviewed before future write-capable milestones are added.
@@ -78,7 +87,7 @@ The plan is a JSON artifact with ordered steps, warnings, blocked properties, an
 Applying a plan can create or modify a Telegram destination. It never copies source messages or source members.
 
 ```bash
-python -m telegram_structure_cloner apply plans/source.plan.json --output results/source.apply-result.json --confirm
+telemorph apply --confirm
 ```
 
 Without `--confirm`, the command refuses to run.
@@ -86,7 +95,7 @@ Without `--confirm`, the command refuses to run.
 ## Verify An Apply Result
 
 ```bash
-python -m telegram_structure_cloner verify plans/source.plan.json results/source.apply-result.json --output reports/source.verification.json
+telemorph verify
 ```
 
 Verification checks that every planned step has a corresponding apply result and that destination identity was captured.

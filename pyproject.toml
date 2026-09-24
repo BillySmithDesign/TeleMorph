@@ -3,14 +3,20 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "telegram-structure-cloner"
+name = "telemorph"
 version = "0.1.0"
-description = "Read-only Telegram structure blueprint exporter built on Telethon."
+description = "Telegram structure blueprint exporter and clone planner built on Telethon."
 requires-python = ">=3.11"
 dependencies = [
   "Telethon>=1.36,<2",
   "python-dotenv>=1.0,<2",
 ]
+
+[project.scripts]
+telemorph = "telegram_structure_cloner.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["telegram_structure_cloner*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
