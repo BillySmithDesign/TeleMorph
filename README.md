@@ -6,6 +6,8 @@ M1 exports a versioned `blueprint.json` from an existing Telegram dialog. It doe
 
 M2 validates saved blueprints and creates a dry-run destination plan. It still does not create or modify Telegram destinations.
 
+M3 applies a reviewed plan to create/configure a destination and writes an apply result. This is the first write-capable milestone and requires an explicit `--confirm` flag.
+
 ## What M1 Captures
 
 - Telethon user authentication with a persistent local session.
@@ -71,6 +73,24 @@ python -m telegram_structure_cloner plan blueprints/source.blueprint.json --dest
 
 The plan is a JSON artifact with ordered steps, warnings, blocked properties, and a `dry_run: true` flag. It is designed to be reviewed before future write-capable milestones are added.
 
+## Apply A Plan
+
+Applying a plan can create or modify a Telegram destination. It never copies source messages or source members.
+
+```bash
+python -m telegram_structure_cloner apply plans/source.plan.json --output results/source.apply-result.json --confirm
+```
+
+Without `--confirm`, the command refuses to run.
+
+## Verify An Apply Result
+
+```bash
+python -m telegram_structure_cloner verify plans/source.plan.json results/source.apply-result.json --output reports/source.verification.json
+```
+
+Verification checks that every planned step has a corresponding apply result and that destination identity was captured.
+
 ## Blueprint Contract
 
 The export format is versioned:
@@ -109,9 +129,23 @@ M2 emits a versioned plan:
 
 Steps are marked `planned`, `skipped`, or `blocked`. Invalid blueprints block every generated step.
 
+## Apply Result Contract
+
+```json
+{
+  "generated_at": "2026-09-24T00:00:00Z",
+  "destination": {},
+  "results": []
+}
+```
+
+Result statuses are `applied`, `skipped`, `unsupported`, or `failed`.
+
 ## Safety Notes
 
-This project uses only read-oriented Telethon calls in M1. M2 only reads local JSON files and writes local plan files. The codebase keeps export logic separate from future replication modules so mutation features can be reviewed independently before they are added.
+This project uses only read-oriented Telethon calls in M1. M2 only reads local JSON files and writes local plan files. M3 write-capable code is isolated under `telegram_structure_cloner/replication` and requires `apply --confirm`.
+
+The project does not copy messages or members. Username, invite links, linked chats, reactions, and binary media uploads may require additional privileged or unsupported Telegram API behavior and are reported rather than silently assumed.
 
 ## Reference
 

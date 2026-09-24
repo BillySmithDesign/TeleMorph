@@ -48,7 +48,7 @@ def build_destination_plan(
     steps: list[PlanStep] = []
     warnings: list[str] = []
 
-    add_identity_step(steps, source, planned_title)
+    add_identity_step(steps, source, blueprint, planned_title)
     add_settings_step(steps, blueprint, warnings)
     add_permissions_step(steps, blueprint, warnings)
     add_forum_steps(steps, blueprint, warnings)
@@ -85,8 +85,15 @@ def default_destination_title(source: dict[str, Any]) -> str:
     return f"{title} Clone"
 
 
-def add_identity_step(steps: list[PlanStep], source: dict[str, Any], destination_title: str) -> None:
+def add_identity_step(
+    steps: list[PlanStep],
+    source: dict[str, Any],
+    blueprint: dict[str, Any],
+    destination_title: str,
+) -> None:
     source_type = source.get("type", "unknown")
+    settings = blueprint.get("settings", {})
+    forum = blueprint.get("forum", {})
     action = "create_destination"
     if source_type == "channel":
         target_type = "channel"
@@ -105,6 +112,8 @@ def add_identity_step(steps: list[PlanStep], source: dict[str, Any], destination
                 "source_type": source_type,
                 "target_type": target_type,
                 "title": destination_title,
+                "about": settings.get("about") if isinstance(settings, dict) else "",
+                "forum": bool(forum.get("enabled")) if isinstance(forum, dict) else False,
                 "copy_username": False,
                 "copy_members": False,
                 "copy_messages": False,
@@ -182,7 +191,11 @@ def add_forum_steps(
             action="configure_forum",
             status="planned" if enabled else "skipped",
             reason="Enable forum mode before topic creation when the source is a forum.",
-            payload={"enabled": enabled, "topic_count": len(topics) if isinstance(topics, list) else 0},
+            payload={
+                "enabled": enabled,
+                "tabs_enabled": bool(forum.get("tabs_enabled", False)),
+                "topic_count": len(topics) if isinstance(topics, list) else 0,
+            },
         )
     )
 

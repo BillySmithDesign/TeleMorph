@@ -1,1 +1,1 @@
-"""Future blueprint verification modules."""
+"""Verification modules for plan and apply results."""
