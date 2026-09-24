@@ -1,8 +1,10 @@
-# Telegram Structure Cloner
+# TeleMorph
 
 Read-only Telegram source inspection and blueprint export for later channel, group, supergroup, and forum structure replication.
 
 M1 exports a versioned `blueprint.json` from an existing Telegram dialog. It does not copy messages or members, and it never modifies the source.
+
+M2 validates saved blueprints and creates a dry-run destination plan. It still does not create or modify Telegram destinations.
 
 ## What M1 Captures
 
@@ -47,6 +49,28 @@ You can also pass a source by username, invite link, numeric ID, or dialog name:
 python -m telegram_structure_cloner export --source @source_channel --output blueprints/source.blueprint.json
 ```
 
+## Validate A Blueprint
+
+```bash
+python -m telegram_structure_cloner validate blueprints/source.blueprint.json
+```
+
+Validation checks the schema version, required top-level fields, source identity, forum structure, and unsupported-property reporting format.
+
+## Create A Dry-Run Plan
+
+```bash
+python -m telegram_structure_cloner plan blueprints/source.blueprint.json --output plans/source.plan.json
+```
+
+Override the planned destination title if needed:
+
+```bash
+python -m telegram_structure_cloner plan blueprints/source.blueprint.json --destination-title "My Cloned Forum"
+```
+
+The plan is a JSON artifact with ordered steps, warnings, blocked properties, and a `dry_run: true` flag. It is designed to be reviewed before future write-capable milestones are added.
+
 ## Blueprint Contract
 
 The export format is versioned:
@@ -66,9 +90,28 @@ The export format is versioned:
 
 Later milestones should add destination planning, creation, replication, and verification without changing M1's read-only source inspection behavior.
 
+## Plan Contract
+
+M2 emits a versioned plan:
+
+```json
+{
+  "plan_schema_version": "1.0.0",
+  "blueprint_schema_version": "1.0.0",
+  "dry_run": true,
+  "destination_title": "Source Clone",
+  "validation": {},
+  "steps": [],
+  "warnings": [],
+  "blocked_properties": []
+}
+```
+
+Steps are marked `planned`, `skipped`, or `blocked`. Invalid blueprints block every generated step.
+
 ## Safety Notes
 
-This project uses only read-oriented Telethon calls in M1. The codebase keeps export logic separate from future replication modules so mutation features can be reviewed independently before they are added.
+This project uses only read-oriented Telethon calls in M1. M2 only reads local JSON files and writes local plan files. The codebase keeps export logic separate from future replication modules so mutation features can be reviewed independently before they are added.
 
 ## Reference
 

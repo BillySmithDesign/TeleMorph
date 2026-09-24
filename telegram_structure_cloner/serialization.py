@@ -62,3 +62,11 @@ def write_json(path: str | Path, payload: dict[str, Any]) -> None:
         json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
+
+
+def read_json(path: str | Path) -> dict[str, Any]:
+    input_path = Path(path)
+    payload = json.loads(input_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Expected JSON object at top level.")
+    return payload

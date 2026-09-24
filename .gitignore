@@ -1,0 +1,17 @@
+.env
+.codex/
+.venv/
+__pycache__/
+*.py[cod]
+*.session
+*.session-journal
+.pytest_cache/
+.coverage
+htmlcov/
+blueprint.json
+blueprints/
+dist/
+build/
+*.egg-info/
+*.zip
+upload/
