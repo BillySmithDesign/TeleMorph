@@ -82,7 +82,9 @@ async def apply_step(step: dict[str, Any], adapter: Any) -> StepResult:
         )
 
     result_status = (
-        "unsupported"
+        "failed"
+        if details.get("failed") is True
+        else "unsupported"
         if details.get("unsupported") is True
         else "skipped"
         if details.get("noop") is True

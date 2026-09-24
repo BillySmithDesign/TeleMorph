@@ -68,6 +68,8 @@ def summarize_blueprint(blueprint: dict[str, Any]) -> None:
     forum = blueprint.get("forum", {})
     permissions = blueprint.get("permissions", {})
     media = blueprint.get("configuration_media", {})
+    assets = media.get("assets", []) if isinstance(media, dict) else []
+    has_display_asset = any(isinstance(asset, dict) and asset.get("kind") == "display_photo" for asset in assets)
     unsupported = blueprint.get("unsupported_properties", [])
 
     table = summary_table("Blueprint Summary")
@@ -77,6 +79,7 @@ def summarize_blueprint(blueprint: dict[str, Any]) -> None:
     table.add_row("Topics found", str(len(forum.get("topics", [])) if isinstance(forum.get("topics"), list) else 0))
     table.add_row("Default permissions", "captured" if permissions.get("default_banned_rights") else "not available")
     table.add_row("Config media", "detected" if media.get("photo") or media.get("chat_photo") else "not detected")
+    table.add_row("Display photo asset", "ready" if has_display_asset else "not available")
     table.add_row("Unsupported notes", str(len(unsupported) if isinstance(unsupported, list) else 0))
     console.print(table)
 

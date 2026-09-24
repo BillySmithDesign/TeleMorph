@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import random
+from pathlib import Path
 from typing import Any
 
-from telethon.tl.functions.channels import CreateChannelRequest, ToggleForumRequest
+from telethon.tl.functions.channels import CreateChannelRequest, EditPhotoRequest, ToggleForumRequest
 from telethon.tl.functions.messages import (
     CreateForumTopicRequest,
     EditChatAboutRequest,
     EditChatDefaultBannedRightsRequest,
 )
 from telethon.errors import ChatAboutNotModifiedError
+from telethon.tl.types import InputChatUploadedPhoto
 
 from .rights import build_banned_rights
 
@@ -82,10 +84,29 @@ class TelethonDestinationAdapter:
         return {"topic_title": title, "result_type": type(result).__name__}
 
     async def apply_configuration_media(self, payload: dict[str, Any]) -> dict[str, Any]:
+        destination = self.require_destination()
+        asset = display_photo_asset(payload)
+        if asset is None:
+            return {
+                "unsupported": True,
+                "media_applied": False,
+                "reason": "No downloaded display photo asset was available.",
+                "metadata_present": bool(payload),
+            }
+        path = Path(str(asset["path"]))
+        if not path.exists():
+            return {
+                "failed": True,
+                "failed_asset_path": str(path),
+                "media_applied": False,
+                "reason": "Downloaded display photo asset is missing on disk.",
+            }
+        uploaded = await self.client.upload_file(str(path))
+        await self.client(EditPhotoRequest(channel=destination, photo=InputChatUploadedPhoto(file=uploaded)))
         return {
-            "unsupported": True,
-            "media_applied": False,
-            "reason": "Binary media upload is not implemented in this milestone.",
+            "media_applied": True,
+            "asset_path": str(path),
+            "asset_sha256": asset.get("sha256"),
             "metadata_present": bool(payload),
         }
 
@@ -125,3 +146,13 @@ def unsupported_settings_fields(payload: dict[str, Any]) -> list[str]:
         )
         if payload.get(name) is not None
     ]
+
+
+def display_photo_asset(payload: dict[str, Any]) -> dict[str, Any] | None:
+    assets = payload.get("assets", [])
+    if not isinstance(assets, list):
+        return None
+    for asset in assets:
+        if isinstance(asset, dict) and asset.get("kind") == "display_photo" and asset.get("path"):
+            return asset
+    return None

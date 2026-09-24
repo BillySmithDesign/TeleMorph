@@ -35,6 +35,17 @@ def sample_blueprint() -> dict:
             }
         ],
     }
-    blueprint.configuration_media = {"photo": {"photo_id": 456}}
+    blueprint.configuration_media = {
+        "photo": {"photo_id": 456},
+        "assets": [
+            {
+                "kind": "display_photo",
+                "path": "/tmp/telemorph-test-photo.jpg",
+                "sha256": "abc123",
+                "bytes": 12,
+                "content_type": "image/jpeg",
+            }
+        ],
+    }
     blueprint.add_unsupported("invite_links", "Not exported in M1.")
     return blueprint.to_dict()

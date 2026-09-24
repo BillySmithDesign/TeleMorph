@@ -7,19 +7,48 @@ from telethon.tl.functions.messages import GetForumTopicsRequest, GetFullChatReq
 from telethon.tl.types import Channel, Chat
 
 from .blueprint import Blueprint
+from .media_assets import DEFAULT_ASSET_DIR, download_config_photo
 from .serialization import public_attrs, sanitize
 
 
-async def inspect_source(client: Any, entity: Any) -> Blueprint:
+async def inspect_source(client: Any, entity: Any, asset_dir: str = DEFAULT_ASSET_DIR) -> Blueprint:
     blueprint = Blueprint.empty()
     blueprint.source = extract_identity(entity)
     full = await fetch_full_entity(client, entity, blueprint)
     blueprint.settings = extract_settings(entity, full, blueprint)
     blueprint.permissions = extract_permissions(entity, full, blueprint)
     blueprint.configuration_media = extract_configuration_media(entity, full, blueprint)
+    await attach_configuration_assets(client, entity, blueprint, asset_dir)
     blueprint.forum = await extract_forum(client, entity, full, blueprint)
     record_known_gaps(entity, blueprint)
     return blueprint
+
+
+async def attach_configuration_assets(
+    client: Any,
+    entity: Any,
+    blueprint: Blueprint,
+    asset_dir: str,
+) -> None:
+    if not blueprint.configuration_media.get("photo") and not blueprint.configuration_media.get("chat_photo"):
+        return
+    try:
+        asset = await download_config_photo(client, entity, asset_dir=asset_dir)
+    except Exception as exc:
+        blueprint.add_unsupported(
+            "configuration_media.display_photo_asset",
+            f"Display photo could not be downloaded: {type(exc).__name__}: {exc}",
+            severity="warning",
+        )
+        return
+    if asset is None:
+        blueprint.add_unsupported(
+            "configuration_media.display_photo_asset",
+            "Telegram did not return a downloadable display photo asset.",
+            severity="warning",
+        )
+        return
+    blueprint.configuration_media.setdefault("assets", []).append(asset)
 
 
 def extract_identity(entity: Any) -> dict[str, Any]:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+from typing import Any
 
 from .client import create_client
 from .config import load_config
@@ -30,7 +31,7 @@ from .validation import validate_blueprint
 from .verification.report import verify_apply_result
 
 
-async def export_blueprint(source: str | None, output: str) -> None:
+async def export_blueprint(source: str | None, output: str, asset_dir: str) -> None:
     section("TeleMorph Export")
     config = load_config()
     client = create_client(config)
@@ -40,7 +41,7 @@ async def export_blueprint(source: str | None, output: str) -> None:
             await client.start()
         entity = await resolve_source(client, source)
         print("Inspecting source structure. No messages or members will be copied.")
-        blueprint = await inspect_source(client, entity)
+        blueprint = await inspect_source(client, entity, asset_dir=asset_dir)
         ensure_parent(output)
         write_json(output, blueprint.to_dict())
         summarize_blueprint(blueprint.to_dict())
@@ -96,6 +97,9 @@ async def apply_destination_plan(input_path: str, output: str, confirm: bool) ->
         if not await client.is_user_authorized():
             print("Telegram login required. Follow the prompts from Telethon.")
             await client.start()
+        duplicate = await destination_title_exists(client, plan.get("destination_title"))
+        if duplicate:
+            print(f"Warning: a dialog named {plan.get('destination_title')!r} already exists.")
         adapter = TelethonDestinationAdapter(client)
         result = await apply_plan(plan, adapter)
         ensure_parent(output)
@@ -119,6 +123,13 @@ def verify_result(plan_path: str, result_path: str, output: str) -> int:
     print()
     print(f"Verification report written: {output}")
     return 0 if report.passed else 1
+
+
+async def destination_title_exists(client: Any, title: str | None) -> bool:
+    if not title:
+        return False
+    dialogs = await client.get_dialogs()
+    return any(getattr(dialog, "name", None) == title for dialog in dialogs)
 
 
 async def run_menu() -> int:
@@ -150,6 +161,7 @@ def build_parser() -> argparse.ArgumentParser:
     export_parser = subparsers.add_parser("export", help="Export a read-only source blueprint.")
     export_parser.add_argument("--source", help="Username, invite link, ID, or dialog name.")
     export_parser.add_argument("--output", default=DEFAULT_BLUEPRINT_PATH, help="Output JSON path.")
+    export_parser.add_argument("--asset-dir", default="assets/config_media", help="Config media asset folder.")
 
     validate_parser = subparsers.add_parser("validate", help="Validate a blueprint JSON file.")
     validate_parser.add_argument("input", nargs="?", default=DEFAULT_BLUEPRINT_PATH, help="Blueprint JSON path.")
@@ -188,7 +200,7 @@ def main() -> None:
     elif args.command == "menu":
         raise SystemExit(asyncio.run(run_menu()))
     elif args.command == "export":
-        asyncio.run(export_blueprint(source=args.source, output=args.output))
+        asyncio.run(export_blueprint(source=args.source, output=args.output, asset_dir=args.asset_dir))
     elif args.command == "validate":
         raise SystemExit(validate_blueprint_file(args.input))
     elif args.command == "plan":

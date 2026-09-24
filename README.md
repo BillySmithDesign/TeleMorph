@@ -8,6 +8,8 @@ M2 validates saved blueprints and creates a dry-run destination plan. It still d
 
 M3 applies a reviewed plan to create/configure a destination and writes an apply result. This is the first write-capable milestone and requires an explicit `--confirm` flag.
 
+M4 downloads the source display photo as a configuration asset, includes it in the plan, uploads it to the destination during apply, and warns when a planned destination title already exists.
+
 ## What M1 Captures
 
 - Telethon user authentication with a persistent local session.
@@ -17,6 +19,7 @@ M3 applies a reviewed plan to create/configure a destination and writes an apply
 - Default banned rights and admin rights metadata where available.
 - Forum topic list and topic metadata where available.
 - Configuration media metadata such as chat photo identifiers and document/photo references exposed by Telegram.
+- Downloaded display photo asset where Telegram exposes one.
 - Unsupported, unavailable, or permission-limited properties in `unsupported_properties`.
 
 ## What M1 Does Not Do
@@ -160,7 +163,7 @@ Result statuses are `applied`, `skipped`, `unsupported`, or `failed`.
 
 This project uses only read-oriented Telethon calls in M1. M2 only reads local JSON files and writes local plan files. M3 write-capable code is isolated under `telegram_structure_cloner/replication` and requires `apply --confirm`.
 
-The project does not copy messages or members. Username, invite links, linked chats, reactions, and binary media uploads may require additional privileged or unsupported Telegram API behavior and are reported rather than silently assumed.
+The project does not copy messages or members. It only downloads/uploads configuration media such as the top-level display photo. Username, invite links, linked chats, reactions, and message media may require additional privileged or unsupported Telegram API behavior and are reported rather than silently assumed.
 
 ## Reference
 

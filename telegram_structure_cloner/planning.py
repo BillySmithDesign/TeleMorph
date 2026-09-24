@@ -226,16 +226,21 @@ def add_media_step(
 ) -> None:
     media = blueprint.get("configuration_media", {})
     has_photo_metadata = isinstance(media, dict) and bool(media.get("photo") or media.get("chat_photo"))
-    status = "planned" if has_photo_metadata else "skipped"
-    if has_photo_metadata:
-        warnings.append("M2 plans configuration media metadata only; binary media download is not added yet.")
+    assets = media.get("assets", []) if isinstance(media, dict) else []
+    has_display_asset = any(
+        isinstance(asset, dict) and asset.get("kind") == "display_photo" and asset.get("path")
+        for asset in assets
+    )
+    status = "planned" if has_display_asset else "skipped"
+    if has_photo_metadata and not has_display_asset:
+        warnings.append("Configuration media metadata was detected, but no downloadable display photo asset is available.")
 
     steps.append(
         PlanStep(
             id="apply_configuration_media",
             action="apply_configuration_media",
             status=status,
-            reason="Apply destination photo/theme metadata when binary assets are available in a later milestone.",
+            reason="Apply the downloaded source display photo to the destination.",
             payload=media if isinstance(media, dict) else {},
         )
     )
