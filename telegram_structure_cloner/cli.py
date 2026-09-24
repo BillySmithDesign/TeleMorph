@@ -15,6 +15,7 @@ from .output import (
     ensure_parent,
     next_command,
     print_guided_help,
+    print_menu,
     section,
     summarize_apply_result,
     summarize_blueprint,
@@ -120,11 +121,31 @@ def verify_result(plan_path: str, result_path: str, output: str) -> int:
     return 0 if report.passed else 1
 
 
+async def run_menu() -> int:
+    choice = print_menu()
+    if choice == "1":
+        await export_blueprint(source=None, output=DEFAULT_BLUEPRINT_PATH)
+        return 0
+    if choice == "2":
+        return validate_blueprint_file(DEFAULT_BLUEPRINT_PATH)
+    if choice == "3":
+        return plan_destination(DEFAULT_BLUEPRINT_PATH, DEFAULT_PLAN_PATH, None)
+    if choice == "4":
+        return await apply_destination_plan(DEFAULT_PLAN_PATH, DEFAULT_APPLY_RESULT_PATH, True)
+    if choice == "5":
+        return verify_result(DEFAULT_PLAN_PATH, DEFAULT_APPLY_RESULT_PATH, DEFAULT_VERIFICATION_PATH)
+    if choice == "6":
+        print_guided_help()
+        return 0
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="telemorph")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("help", help="Show the guided TeleMorph workflow.")
+    subparsers.add_parser("menu", help="Show prompt-based flow buttons.")
 
     export_parser = subparsers.add_parser("export", help="Export a read-only source blueprint.")
     export_parser.add_argument("--source", help="Username, invite link, ID, or dialog name.")
@@ -164,6 +185,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.command == "help":
         print_guided_help()
+    elif args.command == "menu":
+        raise SystemExit(asyncio.run(run_menu()))
     elif args.command == "export":
         asyncio.run(export_blueprint(source=args.source, output=args.output))
     elif args.command == "validate":

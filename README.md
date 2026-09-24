@@ -48,6 +48,12 @@ telemorph help
 
 This shows the normal flow, default paths, safe commands, and the write command that requires confirmation.
 
+For prompt-based flow buttons:
+
+```bash
+telemorph menu
+```
+
 ## Export A Blueprint
 
 ```bash

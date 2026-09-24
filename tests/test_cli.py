@@ -13,6 +13,12 @@ def test_parser_uses_telemorph_program_name():
     assert parser.prog == "telemorph"
 
 
+def test_parser_accepts_menu_command():
+    args = build_parser().parse_args(["menu"])
+
+    assert args.command == "menu"
+
+
 def test_validate_uses_default_blueprint_path():
     args = build_parser().parse_args(["validate"])
 
