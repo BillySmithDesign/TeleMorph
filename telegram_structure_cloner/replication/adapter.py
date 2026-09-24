@@ -9,6 +9,7 @@ from telethon.tl.functions.messages import (
     EditChatAboutRequest,
     EditChatDefaultBannedRightsRequest,
 )
+from telethon.errors import ChatAboutNotModifiedError
 
 from .rights import build_banned_rights
 
@@ -37,23 +38,18 @@ class TelethonDestinationAdapter:
         destination = self.require_destination()
         about = payload.get("about")
         if about:
-            await self.client(EditChatAboutRequest(peer=destination, about=str(about)))
-        unsupported_fields = [
-            name
-            for name in (
-                "slowmode_seconds",
-                "join_to_send",
-                "join_request",
-                "noforwards",
-                "linked_chat_id",
-                "available_reactions",
-                "translations_disabled",
-            )
-            if payload.get(name) is not None
-        ]
+            try:
+                await self.client(EditChatAboutRequest(peer=destination, about=str(about)))
+            except ChatAboutNotModifiedError:
+                return {
+                    "about_applied": False,
+                    "noop": True,
+                    "reason": "Destination about text was already unchanged.",
+                    "unsupported_fields": unsupported_settings_fields(payload),
+                }
         return {
             "about_applied": bool(about),
-            "unsupported_fields": unsupported_fields,
+            "unsupported_fields": unsupported_settings_fields(payload),
             "reason": "Only destination about text is currently applied from this settings step.",
         }
 
@@ -113,3 +109,19 @@ def entity_summary(entity: Any) -> dict[str, Any]:
         "username": getattr(entity, "username", None),
         "raw_class": type(entity).__name__,
     }
+
+
+def unsupported_settings_fields(payload: dict[str, Any]) -> list[str]:
+    return [
+        name
+        for name in (
+            "slowmode_seconds",
+            "join_to_send",
+            "join_request",
+            "noforwards",
+            "linked_chat_id",
+            "available_reactions",
+            "translations_disabled",
+        )
+        if payload.get(name) is not None
+    ]

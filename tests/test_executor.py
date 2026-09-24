@@ -11,7 +11,7 @@ class FakeAdapter:
         return {"id": 999, "title": payload["title"], "raw_class": "FakeChannel"}
 
     async def apply_destination_settings(self, payload):
-        return {"about_applied": bool(payload.get("about"))}
+        return {"about_applied": False, "noop": True, "reason": "Already unchanged."}
 
     async def apply_default_permissions(self, payload):
         return {"permissions_applied": bool(payload.get("default_banned_rights"))}
@@ -34,7 +34,11 @@ async def test_apply_plan_runs_planned_steps():
     serialized = result.to_dict()
 
     assert serialized["destination"]["id"] == 999
-    assert {item["status"] for item in serialized["results"]} == {"applied", "unsupported"}
+    assert {item["status"] for item in serialized["results"]} == {
+        "applied",
+        "skipped",
+        "unsupported",
+    }
     assert serialized["results"][0]["action"] == "create_destination"
 
 

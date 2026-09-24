@@ -50,7 +50,7 @@ def verify_apply_result(plan: dict[str, Any], apply_result: dict[str, Any]) -> V
                 )
             )
             continue
-        if result.get("status") not in {"applied", "unsupported"}:
+        if result.get("status") not in {"applied", "unsupported", "skipped"}:
             checks.append(
                 VerificationCheck(
                     path=f"steps.{step_id}",

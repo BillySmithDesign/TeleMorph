@@ -14,7 +14,7 @@ def test_verify_apply_result_passes_when_steps_are_present():
             StepResult(
                 step_id=step["id"],
                 action=step["action"],
-                status="applied",
+                status="skipped" if step["id"] == "apply_settings" else "applied",
                 message="ok",
             )
             for step in plan["steps"]

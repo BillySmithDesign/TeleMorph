@@ -81,10 +81,16 @@ async def apply_step(step: dict[str, Any], adapter: Any) -> StepResult:
             message=f"{type(exc).__name__}: {exc}",
         )
 
-    result_status = "unsupported" if details.get("unsupported") is True else "applied"
+    result_status = (
+        "unsupported"
+        if details.get("unsupported") is True
+        else "skipped"
+        if details.get("noop") is True
+        else "applied"
+    )
     result_message = (
         str(details.get("reason"))
-        if result_status == "unsupported" and details.get("reason")
+        if result_status in {"unsupported", "skipped"} and details.get("reason")
         else "Step applied."
     )
     return StepResult(
