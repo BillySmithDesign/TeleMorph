@@ -81,10 +81,16 @@ async def apply_step(step: dict[str, Any], adapter: Any) -> StepResult:
             message=f"{type(exc).__name__}: {exc}",
         )
 
+    result_status = "unsupported" if details.get("unsupported") is True else "applied"
+    result_message = (
+        str(details.get("reason"))
+        if result_status == "unsupported" and details.get("reason")
+        else "Step applied."
+    )
     return StepResult(
         step_id=step_id,
         action=action,
-        status="applied",
-        message="Step applied.",
+        status=result_status,
+        message=result_message,
         details=details if isinstance(details, dict) else {"result": details},
     )

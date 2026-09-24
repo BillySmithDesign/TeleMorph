@@ -38,7 +38,24 @@ class TelethonDestinationAdapter:
         about = payload.get("about")
         if about:
             await self.client(EditChatAboutRequest(peer=destination, about=str(about)))
-        return {"about_applied": bool(about)}
+        unsupported_fields = [
+            name
+            for name in (
+                "slowmode_seconds",
+                "join_to_send",
+                "join_request",
+                "noforwards",
+                "linked_chat_id",
+                "available_reactions",
+                "translations_disabled",
+            )
+            if payload.get(name) is not None
+        ]
+        return {
+            "about_applied": bool(about),
+            "unsupported_fields": unsupported_fields,
+            "reason": "Only destination about text is currently applied from this settings step.",
+        }
 
     async def apply_default_permissions(self, payload: dict[str, Any]) -> dict[str, Any]:
         destination = self.require_destination()
@@ -70,6 +87,7 @@ class TelethonDestinationAdapter:
 
     async def apply_configuration_media(self, payload: dict[str, Any]) -> dict[str, Any]:
         return {
+            "unsupported": True,
             "media_applied": False,
             "reason": "Binary media upload is not implemented in this milestone.",
             "metadata_present": bool(payload),

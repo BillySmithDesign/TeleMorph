@@ -23,7 +23,7 @@ class FakeAdapter:
         return {"topic_title": payload["title"]}
 
     async def apply_configuration_media(self, payload):
-        return {"media_applied": False, "metadata_present": bool(payload)}
+        return {"unsupported": True, "media_applied": False, "metadata_present": bool(payload)}
 
 
 @pytest.mark.asyncio
@@ -34,7 +34,7 @@ async def test_apply_plan_runs_planned_steps():
     serialized = result.to_dict()
 
     assert serialized["destination"]["id"] == 999
-    assert {item["status"] for item in serialized["results"]} == {"applied"}
+    assert {item["status"] for item in serialized["results"]} == {"applied", "unsupported"}
     assert serialized["results"][0]["action"] == "create_destination"
 
 
