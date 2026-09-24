@@ -19,16 +19,25 @@ DEFAULT_VERIFICATION_PATH = "reports/live-test.verification.json"
 
 console = Console()
 
+TELEMORPH_BANNER = r"""
+::::::::::: :::::::::: :::        :::::::::: ::::    ::::   ::::::::  :::::::::  :::::::::  :::    :::
+    :+:     :+:        :+:        :+:        +:+:+: :+:+:+ :+:    :+: :+:    :+: :+:    :+: :+:    :+:
+    +:+     +:+        +:+        +:+        +:+ +:+:+ +:+ +:+    +:+ +:+    +:+ +:+    +:+ +:+    +:+
+    +#+     +#++:++#   +#+        +#++:++#   +#+  +:+  +#+ +#+    +:+ +#++:++#:  +#++:++#+  +#++:++#++
+    +#+     +#+        +#+        +#+        +#+       +#+ +#+    +#+ +#+    +#+ +#+        +#+    +#+
+    #+#     #+#        #+#        #+#        #+#       #+# #+#    #+# #+#    #+# #+#        #+#    #+#
+    ###     ########## ########## ########## ###       ###  ########  ###    ### ###        ###    ###
+""".strip("\n")
+
 
 def header(subtitle: str | None = None) -> None:
-    art = Text()
-    art.append("TELE", style="bold cyan")
-    art.append("MORPH", style="bold magenta")
+    art = Text(TELEMORPH_BANNER, style="bold cyan")
     art.append("\nTelegram Structure Cloner", style="dim")
     if subtitle:
         art.append(f"\n{subtitle}", style="white")
     console.print()
-    console.print(Panel(art, border_style="cyan", box=box.DOUBLE, padding=(1, 2)))
+    console.print(art, soft_wrap=True)
+    console.rule(style="cyan")
 
 
 def section(title: str) -> None:
